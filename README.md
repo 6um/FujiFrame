@@ -1,105 +1,121 @@
 # FujiFrame
 
-本地、离线的 macOS 富士 X-T5 配方与 JPEG 样片资料库。使用 SwiftUI、SQLite、ImageIO，无第三方运行时依赖。
+**Keep your Fujifilm X-T5 recipes and JPEG samples together.**
 
-## 打开应用
+FujiFrame is a local, offline macOS app for organizing camera recipes and the photos taken with them. Record film simulation, white balance, and other settings; preserve each revision; and link sample photos to the exact recipe version used.
 
-双击 `build/FujiFrame.app`。也可将应用复制到“应用程序”文件夹；资料库独立存放，不会随应用移动。
+Built with SwiftUI, SQLite, and ImageIO. No third-party runtime dependencies, account, or cloud connection required.
 
-1. 点击“创建我的资料库”，选定一个新的文件夹，默认建议 `图片/FujiFrame Library`。
-2. 点击左侧 `+` 创建配方。所有参数默认为“未记录”，不会自动填入相机默认值。
-3. 点击左侧“智能导入”选择多张 JPEG，或从 Finder 将文件拖入中间区域；无需先选配方。在审核窗口检查自动建议，手动调整或排除照片，再点击“确认导入”。
-4. 点击样片查看实际光圈、快门、ISO、焦距、镜头、拍摄时间及尺寸。右上角放大按钮进入大图查看；滑杆放大，滚动平移，“适应窗口”复位。网格聚焦或大图中可用左右方向键切换。
+## Features
 
-测试资料库位于 `build/qa/QA Library`，包含明确标注的**合成样片**，并非相机实拍。正式使用时请创建自己的资料库。资料库菜单中的“关闭资料库”返回欢迎页。
+| Feature | What you can do |
+| --- | --- |
+| Recipes and version history | Record camera settings, firmware, exposure notes, and source links. Changes to settings create a new version while preserving previous settings and photo associations. Duplicate, archive, and restore recipes. |
+| Smart import with review | Select or drag in multiple JPEGs, read local Fujifilm metadata, and review suggested recipe matches. Assign photos individually or in batches, select historical versions, or exclude photos before confirming. |
+| Photo browsing and search | Browse by recipe and version; search names, descriptions, or filenames; filter by film simulation and capture date. Zoom, pan, and navigate photos with the arrow keys. |
+| Capture information | Inspect aperture, shutter speed, ISO, focal length, lens, capture time, and image dimensions. Missing values remain unknown. |
+| Original preservation and deduplication | Copy original JPEGs without rewriting EXIF or color profiles. Deduplicate by content hash and associate one original with multiple recipe versions. |
+| Library backup and restore | Back up the database and linked originals to a separate folder, verify integrity on restore, or move the entire library. |
 
-## 配方与版本
+Recipes organize your shooting records. They do not write settings back to the camera or apply filters to photos. Smart import suggestions always require your confirmation.
 
-- 参数、固件或曝光建议改变会生成新版本；旧版本不覆盖，旧样片不会自动改绑。
-- 名称、简介和来源链接直接更新，不生成版本；来源链接可留空。
-- “更多 → 编辑配方”以当前选中的版本为起点；在历史版本上修改会产生新的最新版本。
-- “复制为新配方”复制所选版本的参数，不复制样片；归档配方保留全部数据，可在“查看已归档配方”中恢复。
-- “全部版本”用于跨版本浏览；全局智能导入无需选择版本。右上角“导入到此版本”会预填你选定的目标，但仍须审核确认。同一文件在不同版本下会显示为不同关联，底层只保存一份原图。
-- 动态范围优先级非 OFF 时，由相机控制动态范围、高光和阴影；保存时去除不适用的手动值。色温仅在选择“色温”白平衡时可录入；黑白色调仅用于 ACROS / MONOCHROME。未记录、自动和不适用分别显示。
-- REALA ACE 等选项是否可用以相机固件及菜单为准。配方不会写回相机，也不会给照片套用滤镜。
+## Install and launch
 
-字段依据：[X-T5 图像质量设置官方手册](https://fujifilm-dsc.com/en/manual/x-t5/menu_shooting/image_quality_setting/)。
+### 1. Prepare your Mac
 
-## 智能导入与审核
+- **macOS 14 or later on an Apple Silicon Mac (M-series chip).** Intel Macs have not been verified.
+- **A macOS development toolchain with Swift 5.9 or later.** The default build uses Swift Package Manager; an Apple Developer account is not required.
 
-智能导入自动比较**未归档配方的最新版本**。只在已填写且适用的参数全部可读、全部一致，且包含胶片模拟及至少三个其他参数、候选唯一时，预选目标；仍须你点击确认。多个配方符合、近似结果或信息缺失均保留为待处理。
-
-审核窗口可以：
-
-- 按已匹配、待处理、已排除、已完成筛选；点击照片查看参数比较与候选。
-- 用 Shift / Command 多选，通过“批量分配”统一调整；单张也可从“导入到”菜单指定。手动选择包含历史版本和已归档配方。
-- “排除”让照片退出此次导入，“恢复”撤销排除；这些操作不会删除原文件。
-- 所有未分配照片必须手工指定或排除，才能确认。候选列表用于比较，点击候选名称不会擅自改变目标；需要使用“导入到”菜单。
-- 分析时可以取消；确认前不复制原图到正式库，仅生成临时缩略图。审核期间暂停其他资料库写操作。
-- 部分失败时保留成功项和失败项的目标选择；可直接重试权限等临时错误。若源文件已修改，选择失败项后“重新分析”，再核对并确认。
-
-智能识别使用本地富士 MakerNotes，不根据画面或文件名猜测。未读到的参数不等于默认值；例如无法证明动态范围优先级是 OFF 时，不会自动预选要求 OFF 的配方。当前没有真实 X-T5 样片验证，无法可靠转换的参数保持未知。详细支持范围和编码依据见 [参数读取说明](docs/FUJI_METADATA.md)。
-
-## 搜索、照片与导入
-
-左侧搜索匹配配方名称、简介或照片文件名；胶片筛选匹配配方的相应版本。日期筛选使用 EXIF 拍摄日期，首尾日期均包含；无拍摄日期的照片在启用日期筛选后不显示。EXIF 不含时区时保留相机原始时间，不猜测时区。
-
-原图按字节复制，不改写 EXIF 和色彩描述文件；按 SHA-256 去重。同一版本重复导入会跳过。缩略图自动旋转并按需加载；导入在后台串行运行，限制同时解码数量。逐文件错误可在“导入记录”中查看，失败文件可单独重试。
-
-右键样片或在详情中“纠正版本”可移动关联；目标已有同一照片时合并。移除最后一个关联时，库内原图移到系统废纸篓；源文件不受影响。如果系统不允许移到废纸篓，操作会报错并保留记录。
-
-## 备份、恢复与移动
-
-使用左下角“资料库 → 备份资料库”，选择**不存在的新目录名称**。导入和其他写操作期间不能开始备份；备份时暂时停止写入。备份是普通文件夹，包含数据库、所有已关联原图及 `manifest.json` 校验清单，缩略图可重建，无需备份。
-
-“从备份恢复”先选备份文件夹，再指定新的恢复目录。验证哈希、数据库和关联后才启用恢复结果，不覆盖现有资料库；校验失败会撤销临时恢复目录。
-
-移动资料库前先关闭资料库或退出应用；移动整个文件夹，再通过“打开资料库”选中它。不要只移动数据库或单独重命名内部原图。
-
-内部结构：
-
-```text
-FujiFrame Library/
-  library.sqlite      # 配方、不可变版本、照片、版本关联；schema v1
-  originals/          # 原始 JPEG，按内容哈希命名
-  thumbnails/         # 可重建预览
-  .staging/           # 暂存导入，打开资料库时清理
-  .library-lock       # 阻止两个进程同时写入
-```
-
-导入在数据库提交前若意外退出，可能留下没有关联的原图；重试导入会校验并复用它。为避免误删，启动时只清理暂存文件，不自动删除原图。备份只包含数据库中已提交的原图。
-
-## 开发与构建
-
-要求 macOS 14+、Apple Silicon，以及可用的 Swift 5.9+ / Xcode 工具链。当前构建实测：macOS 26.3.1、Swift 6.2.4、arm64。
+If you have not installed Apple's command line developer tools, open Terminal and run:
 
 ```bash
-./scripts/test.sh
+xcode-select --install
+```
+
+Follow the system prompts to finish installation. If the tools are already installed, continue. Check that Swift is available:
+
+```bash
+swift --version
+xcrun --find swift
+```
+
+If Swift is missing or too old, install a newer version of the command line developer tools or Xcode compatible with your macOS version before building.
+
+### 2. Download the source and build
+
+The current installation method is to **build the app on your own Mac**. This source repository does not include a prebuilt `.app` or `.dmg`; downloading the source alone does not install the app.
+
+Run these commands in Terminal:
+
+```bash
+git clone https://github.com/6um/FujiFrame.git
+cd FujiFrame
 ./scripts/build-app.sh
 open build/FujiFrame.app
 ```
 
-构建脚本默认使用 Swift Package 生成 Release 可执行文件并封装为 `.app`，进行本机 ad-hoc 签名。无需 Apple 开发者账号。它没有 Developer ID 公证；当前交付面向这台 Mac 本地使用。
+After a successful build, the app is available at `build/FujiFrame.app` inside the repository. Allow the first compilation to finish. If the build fails, check the error reported in Terminal before continuing.
 
-也提供 `FujiFrame.xcodeproj`，可直接在 Xcode 打开。Xcode 完整安装时，可执行：
+Alternatively, choose **Code → Download ZIP** on GitHub and extract the archive. In Terminal, type `cd ` (including the trailing space), drag the extracted folder into the Terminal window, and press Return. Then run:
 
 ```bash
-./scripts/build-app.sh --xcode
+./scripts/build-app.sh
+open build/FujiFrame.app
 ```
 
-本机 `xcodebuild` 加载插件时报告缺少 `CoreSimulator.framework`，因此当前 `.app` 由 Swift Package 构建；Xcode 工程通过 plist 语法验证，尚未在本机完成 Xcode 路线构建。无须为使用已生成的应用修复该组件。
+### 3. Move the app to Applications
 
-新增 Swift 源文件后运行 `python3 scripts/generate-project.py` 更新 Xcode 文件列表。`Package.swift` 自动发现 Sources 下文件。
+After building, open the output folder:
 
-- `Sources/FujiFrameCore`：字段校验、数据模型、SQLite、导入、元数据及备份。
-- `Sources/FujiFrame`：原生 SwiftUI 界面与应用状态。
-- `Tests/FujiFrameCoreTests`：使用生成 JPEG 的自动化测试，不依赖真实照片。
-- `scripts/MakeQAFixtures.swift`：可复现的 UI 测试资料库生成器。
+```bash
+open build
+```
 
-## 当前验证与边界
+Drag **FujiFrame.app** from Finder into your **Applications** folder. You can then launch it by double-clicking it there. Quit any running copy of FujiFrame before moving the app or replacing an older version.
 
-30 项自动测试全部通过，覆盖版本隔离、重命名/归档、去重、纠正关联、同名不同文件、EXIF 缺失及旋转、损坏/不存在的文件、备份恢复、备份损坏、锁、资料库移动和暂存恢复。界面已实测启动、打开/关闭资料库、新建配方、8 张 JPEG 批量导入、网格与曝光详情、文件名搜索、竖拍预览、放大、网格及大图方向键切换；重启后配方和照片仍完整。
+The build script applies a local ad-hoc signature. The app is not Developer ID signed or notarized by Apple, and the current workflow is intended for building and running on your own Mac. If macOS blocks launch, check the app's source and build result first; do not disable system security protections to install it.
 
-智能导入已通过桌面端到端验收：四张合成 JPEG 中，两张自动匹配到不同配方，一张手动分配至历史版本，一张排除；恢复排除会重新阻止确认，最终三张入库，数据库中的版本关联正确。自动化测试另覆盖严格匹配、歧义与缺失字段、畸形 MakerNotes、审核取消无写入、源文件变化和部分失败后的重新分析重试。测试资料位于 `build/smart-qa`，未写入个人资料库。
+**Your library is stored separately from the app.** Moving or replacing the `.app` does not move your library. Keep the folder you selected when creating the library, and use the in-app backup feature regularly.
 
-尚未拿到真实 X-T5 直出 JPEG，尚未实测磁盘写满或超大规模照片库。当前不支持 RAF、HEIF、从照片新建配方、图像编辑或云同步。
+### Update the app
+
+If you installed from a Git clone, quit FujiFrame, open Terminal in the original repository folder, and run:
+
+```bash
+git pull --ff-only
+./scripts/build-app.sh
+```
+
+Copy the newly built `build/FujiFrame.app` into Applications again. If you downloaded a ZIP, download the updated source and rebuild instead. Back up your library before updating.
+
+## First use
+
+The current app interface is in Chinese. The labels below help you locate the main actions.
+
+1. **Create a library:** click “创建我的资料库” (Create My Library) and choose a new folder. The suggested location is `Pictures/FujiFrame Library`. Use “打开资料库” (Open Library) for an existing library.
+2. **Record a recipe:** click `+` in the sidebar and enter a name and camera settings. Parameters start as “未记录” (Not Recorded); fill them in using your actual camera settings.
+3. **Import JPEG samples:** click “智能导入” (Smart Import) or drag multiple JPEGs from Finder. Review suggestions, manually assign unresolved photos to a recipe version or exclude them, then click “确认导入” (Confirm Import).
+4. **Browse photos:** select a recipe and version, then click a sample to inspect its capture information. Use the expand button at the top right for the larger viewer and the left/right arrow keys to navigate.
+5. **Back up your library:** use “资料库 → 备份资料库” (Library → Back Up Library) at the bottom left and choose a new destination folder name that does not already exist.
+
+Smart matching considers only the latest versions of unarchived recipes. Missing metadata, ambiguous candidates, or failure to meet the strict matching criteria require manual assignment. See the [user guide (Chinese)](docs/USER_GUIDE.md) for review rules, batch operations, and backup and restore details.
+
+## Status and limitations
+
+- 30 automated tests and a desktop import workflow with synthetic JPEGs have passed. **Metadata recognition has not yet been validated against real X-T5 camera JPEGs.** Values that cannot be read reliably remain unknown; check suggested matches during review.
+- Automatic Fujifilm recipe metadata parsing currently targets the X-T5. JPEGs from other cameras can be assigned manually; automatic recognition is not guaranteed.
+- RAF, HEIF, creating recipes from photos, image editing, and cloud sync are not currently supported.
+- Intel Macs, full-disk conditions, and very large photo libraries have not been validated. The Xcode project build path has not been fully verified in the current development environment; use the default build script above.
+- The app interface and detailed documentation are currently in Chinese; this English README does not imply an English UI is available.
+
+## Documentation and development
+
+- [User guide (Chinese)](docs/USER_GUIDE.md): recipe versions, import review, search, photo management, backups, and restoration.
+- [Metadata reference (Chinese)](docs/FUJI_METADATA.md): Fujifilm MakerNotes fields, strict matching criteria, and known limitations.
+- [Development and validation notes (Chinese)](docs/DEVELOPMENT.md): project structure, Xcode builds, test coverage, and local validation results.
+
+Run the automated tests from the repository root:
+
+```bash
+./scripts/test.sh
+```
