@@ -46,6 +46,17 @@ final class LibraryTests: XCTestCase {
         let database = try Database(lib.root.appendingPathComponent("library.sqlite"), create: false)
         XCTAssertThrowsError(try database.execute("UPDATE versions SET number=99"))
     }
+    func testRecipeNotesPersistAndLegacyRecipesDecode() async throws {
+        let legacy = Data(#"{"id":"old","name":"旧配方","summary":"","source":"","archived":false}"#.utf8)
+        XCTAssertNil(try JSONDecoder().decode(Recipe.self, from: legacy).notes)
+        let lib = try makeLibrary(); var recipe = Recipe(name: "配方")
+        let original = try await version(lib, recipe: recipe)
+        recipe.notes = "第一行\n第二行"
+        let updated = try await version(lib, recipe: recipe)
+        let snapshot = try await lib.snapshot()
+        XCTAssertEqual(updated.id, original.id)
+        XCTAssertEqual(snapshot.recipes.first?.notes, recipe.notes)
+    }
     func testDeduplicationCrossVersionAndMoveMerge() async throws {
         let lib = try makeLibrary(); let recipe = Recipe(name: "配方")
         let v1 = try await version(lib, recipe: recipe)

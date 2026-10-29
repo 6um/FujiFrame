@@ -64,10 +64,8 @@ struct ContentView: View {
                 }.padding(16)
                 Button { model.choosePhotos() } label: { Label("智能导入…", systemImage: "square.and.arrow.down") }.buttonStyle(.borderedProminent).disabled(model.busy).padding(.bottom, 12)
                 TextField("搜索配方或照片", text: $model.search).textFieldStyle(.roundedBorder).padding(.horizontal, 12)
-                Picker("胶片模拟", selection: $model.film) {
-                    Text("全部胶片模拟").tag("")
-                    ForEach(XT5.films, id: \.self) { Text($0).tag($0) }
-                }.labelsHidden().padding(12)
+                FilmSimulationPicker(selection: $model.film, emptyTitle: "全部胶片模拟", emptySystemImage: "film", fillsWidth: true)
+                    .frame(maxWidth: .infinity).padding(12)
                 List(selection: $model.selectedRecipe) {
                     ForEach(model.visibleRecipes) { recipe in
                         VStack(alignment: .leading, spacing: 6) {
@@ -241,6 +239,10 @@ struct RecipeDetails: View {
             Label("配方记录 · v\(version.number)", systemImage: "slider.horizontal.3").font(.headline)
             Text("手动记录的预设，不代表照片的实际曝光设置。").font(.caption).foregroundStyle(.secondary)
             if let recipe, !recipe.source.isEmpty, let url = URL(string: recipe.source) { Link("查看配方来源 ↗", destination: url).font(.caption) }
+            if let notes = recipe?.notes, !notes.isEmpty {
+                Text("备注").font(.headline)
+                Text(notes).foregroundStyle(.secondary)
+            }
             detail("相机", "FUJIFILM X-T5")
             detail("固件", version.firmware.isEmpty ? "未记录" : version.firmware)
             detail("创建时间", version.created.formatted(date: .abbreviated, time: .shortened))

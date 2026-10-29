@@ -17,7 +17,9 @@ obj('group', 'isa = PBXGroup; children = (' + ','.join(uid('ref'+str(f.relative_
 obj('products', f'isa = PBXGroup; children = ({uid("product")}); name = Products; sourceTree = "<group>";')
 obj('sources', 'isa = PBXSourcesBuildPhase; buildActionMask = 2147483647; files = (' + ','.join(uid('build'+str(f.relative_to(root))) for f in files) + '); runOnlyForDeploymentPostprocessing = 0;')
 obj('frameworks', 'isa = PBXFrameworksBuildPhase; buildActionMask = 2147483647; files = (); runOnlyForDeploymentPostprocessing = 0;')
-obj('resources', 'isa = PBXResourcesBuildPhase; buildActionMask = 2147483647; files = (); runOnlyForDeploymentPostprocessing = 0;')
+obj('fontResources', 'isa = PBXFileReference; lastKnownFileType = folder; path = "Sources/FujiFrame/Resources/FilmSimulationFonts"; sourceTree = SOURCE_ROOT;')
+obj('fontResourcesBuild', f'isa = PBXBuildFile; fileRef = {uid("fontResources")};')
+obj('resources', f'isa = PBXResourcesBuildPhase; buildActionMask = 2147483647; files = ({uid("fontResourcesBuild")}); runOnlyForDeploymentPostprocessing = 0;')
 base = 'MACOSX_DEPLOYMENT_TARGET = 14.0; SDKROOT = macosx; SWIFT_VERSION = 5.0; CLANG_ENABLE_MODULES = YES;'
 app = '''PRODUCT_NAME = FujiFrame; PRODUCT_BUNDLE_IDENTIFIER = local.FujiFrame; GENERATE_INFOPLIST_FILE = YES; INFOPLIST_KEY_CFBundleDisplayName = FujiFrame; INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.photography"; INFOPLIST_KEY_NSHumanReadableCopyright = "FujiFrame"; INFOPLIST_KEY_NSHighResolutionCapable = YES; CODE_SIGN_STYLE = Manual; CODE_SIGN_IDENTITY = "-"; ENABLE_HARDENED_RUNTIME = YES; ENABLE_APP_SANDBOX = NO; OTHER_LDFLAGS = "-lsqlite3"; MARKETING_VERSION = 1.0.0; CURRENT_PROJECT_VERSION = 1; COMBINE_HIDPI_IMAGES = YES;'''
 for scope in ['project','target']:

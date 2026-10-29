@@ -11,6 +11,7 @@ else
     swift build --disable-sandbox --cache-path .build/cache -c release --product FujiFrame
     mkdir -p build/FujiFrame.app/Contents/MacOS build/FujiFrame.app/Contents/Resources
     cp .build/release/FujiFrame build/FujiFrame.app/Contents/MacOS/FujiFrame
+    /usr/bin/ditto .build/release/FujiFrame_FujiFrame.bundle build/FujiFrame.app/Contents/Resources/FujiFrame_FujiFrame.bundle
     /usr/bin/plutil -create xml1 build/FujiFrame.app/Contents/Info.plist
     /usr/bin/plutil -insert CFBundleExecutable -string FujiFrame build/FujiFrame.app/Contents/Info.plist
     /usr/bin/plutil -insert CFBundleIdentifier -string local.FujiFrame build/FujiFrame.app/Contents/Info.plist

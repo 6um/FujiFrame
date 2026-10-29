@@ -40,8 +40,13 @@ struct RecipeEditor: View {
             Form {
                 Section("配方信息") {
                     TextField("名称", text: $recipe.name)
-                    TextField("简介", text: $recipe.summary, axis: .vertical).lineLimit(2...4)
+                    TextField("简介", text: $recipe.summary)
                     TextField("来源链接", text: $recipe.source)
+                    VStack(alignment: .leading) {
+                        Text("备注（可选）")
+                        NotesEditor(text: Binding(get: { recipe.notes ?? "" }, set: { recipe.notes = $0 }))
+                            .frame(minHeight: 80)
+                    }
                     TextField("相机固件版本（可选）", text: $firmware)
                     TextField("曝光建议", text: $exposure, axis: .vertical).lineLimit(2...3)
                 }
@@ -61,7 +66,7 @@ struct RecipeEditor: View {
                 if !isNew {
                     Section("版本说明") {
                         TextField("此次调整的原因（可选）", text: $note, axis: .vertical).lineLimit(2...4)
-                        Text("参数、固件或曝光建议改变时生成新版本。仅修改名称、简介、来源不会创建新版本。").font(.caption).foregroundStyle(.secondary)
+                        Text("参数、固件或曝光建议改变时生成新版本。仅修改名称、简介、来源或备注不会创建新版本。").font(.caption).foregroundStyle(.secondary)
                     }
                 }
             }.formStyle(.grouped)
@@ -81,9 +86,47 @@ struct RecipeEditor: View {
         } message: { Text(model.error ?? "") }
     }
     @ViewBuilder func parameter(_ field: ParameterField) -> some View {
+        if field.id == "film" {
+            LabeledContent(field.label) {
+                FilmSimulationPicker(selection: Binding(get: { parameters[field.id] ?? "" }, set: { parameters[field.id] = $0 }))
+                    .fixedSize()
+            }
+        } else {
         Picker(field.label, selection: Binding(get: { parameters[field.id] ?? "" }, set: { parameters[field.id] = $0 })) {
             Text("未记录").tag("")
             ForEach(field.options, id: \.self) { Text($0).tag($0) }
         }.disabled(XT5.disabled(field.id, values: parameters))
+        }
+    }
+}
+
+private struct NotesEditor: NSViewRepresentable {
+    @Binding var text: String
+
+    func makeCoordinator() -> Coordinator { Coordinator(text: $text) }
+
+    func makeNSView(context: Context) -> NSScrollView {
+        let scrollView = NSTextView.scrollableTextView()
+        let textView = scrollView.documentView as! NSTextView
+        textView.delegate = context.coordinator
+        textView.font = .preferredFont(forTextStyle: .body)
+        textView.textContainerInset = NSSize(width: 8, height: 8)
+        textView.string = text
+        scrollView.hasVerticalScroller = true
+        return scrollView
+    }
+
+    func updateNSView(_ scrollView: NSScrollView, context: Context) {
+        guard let textView = scrollView.documentView as? NSTextView, textView.string != text else { return }
+        textView.string = text
+    }
+
+    final class Coordinator: NSObject, NSTextViewDelegate {
+        var text: Binding<String>
+        init(text: Binding<String>) { self.text = text }
+        func textDidChange(_ notification: Notification) {
+            guard let textView = notification.object as? NSTextView else { return }
+            text.wrappedValue = textView.string
+        }
     }
 }

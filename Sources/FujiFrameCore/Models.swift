@@ -79,9 +79,10 @@ public struct Recipe: Codable, Identifiable, Sendable {
     public var name: String
     public var summary: String
     public var source: String
+    public var notes: String?
     public var archived: Bool
-    public init(id: String = UUID().uuidString, name: String = "", summary: String = "", source: String = "", archived: Bool = false) {
-        self.id = id; self.name = name; self.summary = summary; self.source = source; self.archived = archived
+    public init(id: String = UUID().uuidString, name: String = "", summary: String = "", source: String = "", archived: Bool = false, notes: String? = nil) {
+        self.id = id; self.name = name; self.summary = summary; self.source = source; self.archived = archived; self.notes = notes
     }
 }
 public struct RecipeVersion: Codable, Identifiable, Sendable {
